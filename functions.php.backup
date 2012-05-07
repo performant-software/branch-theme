@@ -1,0 +1,283 @@
+<?php
+
+//*************************************
+// Change the breadcrumbs to be hidden for pages and be formatted differently
+// for posts
+function modify_breadcrumbs($breadcrumb) {
+	if ( ! is_admin() ) {
+//		if ( is_page() ){
+			$breadcrumb = "";
+//		}
+	}
+
+	return $breadcrumb;
+}
+
+add_filter( 'breadcrumb_trail', 'modify_breadcrumbs');
+
+//*************************************
+//
+// Use the primary sidebar for only the home page
+//
+function disable_primary($sidebars_widgets) {
+	if ( !is_admin() && !is_page('Home') ) {
+		$sidebars_widgets['primary'] = false;
+		$sidebars_widgets['after-content'] = false;
+	}
+
+	return $sidebars_widgets;
+}
+
+add_filter( 'sidebars_widgets', 'disable_primary');
+
+//*************************************
+//
+// To create the template for timeline articles
+//
+
+// function category_template($t) {
+// 	foreach( (array) get_the_category() as $cat ) {
+// 		$file = STYLESHEETPATH . "/single-" . $cat->slug . ".php";
+// 		if ( file_exists($file) ) {
+// 			echo $file;
+// 			return $file;
+// 		}
+// 	}
+// 	return $t;
+// }
+// 
+// add_filter('single_template', 'category_template' );
+
+//*************************************
+//
+// For creating the custom post type
+//
+
+$article_post_type = 'ps_articles';
+
+// Create the Article post type
+add_action( 'init', 'create_post_type' );
+function create_post_type() {
+	global $article_post_type;
+	register_post_type( $article_post_type,
+		array(
+			'labels' => array(
+				'name' => __( 'Articles' ),
+				'singular_name' => __( 'Article' )
+			),
+		'public' => true,
+		'has_archive' => true,
+		'rewrite' => array('slug' => 'article'),
+		'supports' => array('title', 'editor', 'thumbnail', 'excerpt')
+		)
+	);
+}
+
+// Definition of the Article custom fields
+$article_fields = array(
+	array( 'label' => 'Date Started', 'name' => 'art_date_started', 'type' => 'date'),
+	array( 'label' => 'Date Ended', 'name' => 'art_date_ended', 'type' => 'date'),
+	array( 'label' => 'Duration', 'name' => 'art_duration', 'type' => 'bool'),
+	array( 'label' => 'Visible', 'name' => 'art_visible', 'type' => 'bool'),
+	array( 'label' => 'In Carousel', 'name' => 'art_carousel', 'type' => 'bool')
+);
+
+// Add the custom field meta-box to the Article editing page.
+add_action("admin_init", "admin_init");
+function admin_init(){
+	global $article_post_type;
+  add_meta_box("article_dates-meta", "Article Dates", "article_dates", $article_post_type, "side", "low");
+}
+ 
+function ps_new_field($custom, $name, $label, $type) {
+  $field = $custom[$name][0];
+  echo "<tr>";
+  echo "<td><label for='" . $name . "'>" . $label . ":</label></td>";
+  if ($type == 'bool') {
+    echo "<td><select id='" . $name . "' name='" . $name . "'>";
+	if ($field == 'Yes')
+ 		echo "<option selected='selected'>Yes</option><option>No</option>";
+	else
+ 		echo "<option>Yes</option><option selected='selected'>No</option>";
+	echo "</td>";
+  } else
+    echo "<td><input id='" . $name . "' name='" . $name . "' value='" . $field . "' /></td>";
+  echo "</tr>";
+}
+
+function article_dates(){
+  global $post, $article_fields;
+  $custom = get_post_custom($post->ID);
+  echo "<table>";
+  foreach($article_fields as $field) {
+	ps_new_field($custom, $field['name'], $field['label'], $field['type']);
+  }
+  echo "</table>";
+}
+
+// Sae the custom fields when saving a post.
+add_action('save_post', 'save_details');
+function save_details(){
+  global $post, $article_fields, $article_post_type;
+ 
+	if ($post->post_type == $article_post_type) {
+  		foreach($article_fields as $field) {
+			update_post_meta($post->ID, $field['name'], $_POST[$field['name']]);
+		}
+  	}
+}
+
+// Put the custom fields on the summary view
+add_filter("manage_edit-ps_articles_columns", "ps_articles_edit_columns");
+ 
+function ps_articles_edit_columns($columns){
+  global $article_fields;
+  $columns = array(
+    "cb" => "<input type=\"checkbox\" />",
+    "title" => "Title"
+  );
+
+  foreach($article_fields as $field) {
+	$columns[$field['name']] = $field['label'];
+  }
+ 
+  return $columns;
+}
+
+// Populate the Articles summary columns with the custom post data.
+add_action("manage_posts_custom_column",  "ps_articles_custom_columns");
+function ps_articles_custom_columns($column){
+  global $post, $article_fields;
+ 
+  foreach($article_fields as $field) {
+	if ($column == $field['name']) {
+      $custom = get_post_custom();
+      echo $custom[$column][0];
+	}
+  }
+}
+
+//*************************************
+//
+// For outputting the custom post type data as a RSS feed
+//
+
+function myfeed_request($qv) {
+	if (isset($qv['feed']) && !isset($qv['post_type']))
+		$qv['post_type'] = array('post', 'story', 'books', 'movies');
+	return $qv;
+}
+add_filter('request', 'myfeed_request');
+
+//*************************************
+//
+// For the carousel
+//
+
+function ps_load_carousel_js() {
+	if ( is_page('Home') ) {
+		echo '<link rel="stylesheet" href="'. get_stylesheet_directory_uri() . '/skins/branch/skin.css" type="text/css" media="all" />';	
+		echo '<script src="'. get_stylesheet_directory_uri() . '/jquery.jcarousel.min.js" type="text/javascript"></script>';
+		echo '<script type="text/javascript">jQuery(document).ready(function() { jQuery("#mycarousel").jcarousel(); });</script>';
+	}
+}
+
+add_action ( 'hybrid_before_html', 'ps_load_carousel_js');
+
+function populate_carousel() {
+	global $article_post_type;
+	$carousel = "";
+	$carousel .= '<ul id="mycarousel" class="jcarousel-skin-branch">';
+	$args = array( 'post_type' => $article_post_type );
+	$loop = new WP_Query( $args );
+	while ( $loop->have_posts() ) : $loop->the_post();
+		$title = get_the_title();
+		$link = get_permalink();
+		$thumb = get_the_post_thumbnail();
+		$display = get_post_meta( get_the_ID(), 'art_carousel', true );
+		if (strlen($thumb) > 0 && $display == 'Yes')
+			$carousel .= '<li><a href="' . $link . '">' . $title . '</a>' . $thumb . '</li>';
+	endwhile;
+	$carousel .= '</ul>';
+	return $carousel;
+}
+
+add_shortcode('ps-carousel', 'populate_carousel');
+
+//*************************************
+//
+// For the timeline
+//
+
+// function pstl_warn_if_debugging($msg) {
+// 	if ( defined('WP_DEBUG') and WP_DEBUG == true )	
+// 		echo $msg;
+// }
+
+// function pstl_call_http($URL) {
+// 	// Initialize the library if we've never called it before.
+// 	if( !class_exists( 'WP_Http' ) )
+// 		include_once( ABSPATH . WPINC. '/class-http.php' );
+// 
+// 	$request = new WP_Http;
+// 	// Get and pass the page cookies through to the rails call.
+// 	// We get all the cookies here, then need to divide them into individual cookies to send off.
+// 	$cookies_str = explode(';', $_SERVER['HTTP_COOKIE']);
+// 	$cookies = array();
+// 	foreach ( (array) $cookies_str as $cookie ) {
+// 		$cookies[] = new WP_Http_Cookie($cookie);
+// 	}
+// 	
+// 	// Call the rails server with the cookies
+//     $result = $request->request( $URL, array('cookies' => $cookies ) );
+// 	if ( is_wp_error($result) ) {
+// 		pstl_warn_if_debugging("Error connecting to (" . $URL . "): " . $result->get_error_message());
+// 		return "";
+// 	} else if ($result['response']['code'] == 200)
+// 	    return $result['body'];
+// 	else {
+// 		pstl_warn_if_debugging("Error connecting to (" . $URL . "): " . $result['response']['message']);
+// 		return "";
+// 	}
+// }
+
+function performantTimeline() {
+//	$timeline = '<div id="search"><form action=""><input id="search_input" name="search" value="" placeholder="Timeline Search"></form></div>' .
+//		'<div id="my-timeline"  class="timeline-default" style="height: 300px; border: 1px solid #aaa; margin-top: 20px; margin-bottom: 50px;"></div>' .
+//		'<script src="http://branch-admin.performantsoftware.com/timeline/spans/?callback=loadSpans" type="text/javascript"></script>' .
+//		'<script>initTimeline("");</script>';
+
+//	$timeline = pstl_call_http("http://branch-admin.performantsoftware.com/timeline/widget");
+//	$timeline = str_replace("/timeline/spans", "http://branch-admin.performantsoftware.com/timeline/spans", $timeline);
+//	$timeline = str_replace('initTimeline("")', 'initTimeline("http://branch-admin.performantsoftware.com","")', $timeline);
+
+	$timeline = "\n\n<!-- timeline -->\n";
+	$timeline .= "<div class='timeline-wp-widget'>\n\t<div id='search'>\n\t\t<form action=''>\n\t\t\t<input id='search_input' name='search' value='' placeholder='Timeline Search'>\n\t\t</form>\n\t</div>\n";
+	$timeline .= "\t<div id='my-timeline' class='timeline-default'></div>\n";
+
+	$timeline .= "\t<script src='" . get_bloginfo('url') . "/timeline/spans/?callback=loadSpans' type='text/javascript'></script>\n";
+	$timeline .= "\t<script>initTimeline('" . get_bloginfo('url') . "','');</script>\n</div>\n\n";
+	
+	return $timeline;
+
+}
+
+add_shortcode('ps-timeline', 'performantTimeline');
+
+function pstl_load_stylesheets() {
+//	echo '<link rel="stylesheet" href="http://branch-admin.performantsoftware.com/assets/application.css" type="text/css" media="all" />';	
+//	echo '<script src="http://api.simile-widgets.org/timeline/2.3.1/timeline-api.js?bundle=true" type="text/javascript"></script>';
+//	echo '<script src="http://branch-admin.performantsoftware.com/assets/application.js" type="text/javascript"></script>';
+}
+
+add_action ( 'hybrid_before_html', 'pstl_load_stylesheets');
+
+function my_scripts_method() {
+    wp_register_script( 'timeline-api', 'http://api.simile-widgets.org/timeline/2.3.1/timeline-api.js?bundle=true');
+    wp_enqueue_script( 'timeline-api' );
+    wp_register_script( 'ps_timeline', get_stylesheet_directory_uri() . '/ps_timeline.js');
+    wp_enqueue_script( 'ps_timeline' );
+}    
+ 
+add_action('wp_enqueue_scripts', 'my_scripts_method');
+?>
