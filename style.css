@@ -581,3 +581,23 @@ b, blockquote b {
 .taxonomy-ps_topic .ps_articles {
 	border-bottom: 1px dotted black;
 }
+
+/**************************************************************************************/
+/* SEARCH RESUKLTS PAGE */
+/**************************************************************************************/
+
+.search-title {
+        visibility: hidden;
+}
+
+.search-info {
+	padding-left: 50px;
+}
+
+.loop-meta {
+        margin-bottom: 10px;
+}
+
+.navigation-links .previous {
+	padding-left: 50px;
+}
