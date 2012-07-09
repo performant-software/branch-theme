@@ -364,6 +364,10 @@ body {
 	width: 1024px;
 }
 
+.search-text {
+      width: 185px;
+}
+
 .home #primary, .page-623 #primary {
 	background-color: #D1BE92;
     border: 1px solid #9A8B65;
