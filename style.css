@@ -364,6 +364,10 @@ body {
 	width: 1024px;
 }
 
+.search-text {
+      width: 185px;
+}
+
 .home #primary, .page-623 #primary {
 	background-color: #D1BE92;
     border: 1px solid #9A8B65;
@@ -580,4 +584,24 @@ b, blockquote b {
 
 .taxonomy-ps_topic .ps_articles {
 	border-bottom: 1px dotted black;
+}
+
+/**************************************************************************************/
+/* SEARCH RESUKLTS PAGE */
+/**************************************************************************************/
+
+.search-title {
+        visibility: hidden;
+}
+
+.search-info {
+	padding-left: 50px;
+}
+
+.loop-meta {
+        margin-bottom: 10px;
+}
+
+.navigation-links .previous {
+	padding-left: 50px;
 }
