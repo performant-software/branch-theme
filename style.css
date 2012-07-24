@@ -110,7 +110,7 @@ body {
 	68 = timeline
 	620 = how to use
 	623 = credits
-        1287 = about
+        1292 = about
  */
 
 .nav-menu ul li {
@@ -158,11 +158,11 @@ body {
 }
 
 /* about items */
-.nav-menu ul li.page-item-7, .nav-menu ul li.page-item-9, .nav-menu ul li.page-item-623, .nav-menu ul li.page-item-1287 {
+.nav-menu ul li.page-item-7, .nav-menu ul li.page-item-9, .nav-menu ul li.page-item-623, .nav-menu ul li.page-item-1292 {
 	top: 50px;
 }
 
-.nav-menu ul li.page-item-1287 {
+.nav-menu ul li.page-item-1292 {
 	left: 312px;
 }
 
@@ -178,17 +178,17 @@ body {
 	left: 381px;
 }
 
-.nav-menu ul li.page-item-7 a, .nav-menu ul li.page-item-9 a, .nav-menu ul li.page-item-1287 a {
+.nav-menu ul li.page-item-7 a, .nav-menu ul li.page-item-9 a, .nav-menu ul li.page-item-1292 a {
 	border-right: 1px solid #AAAAAA;
 	padding-right: 10px;
 }
 
-.nav-menu ul li.page-item-7 a, .nav-menu ul li.page-item-9 a, .nav-menu ul li.page-item-623 a, .nav-menu ul li.page-item-1287 a,
-.nav-menu ul li.page-item-7 a:visited, .nav-menu ul li.page-item-9 a:visited, .nav-menu ul li.page-item-623 a:visited, .nav-menu ul li.page-item-1287 a:visited {
+.nav-menu ul li.page-item-7 a, .nav-menu ul li.page-item-9 a, .nav-menu ul li.page-item-623 a, .nav-menu ul li.page-item-1292 a,
+.nav-menu ul li.page-item-7 a:visited, .nav-menu ul li.page-item-9 a:visited, .nav-menu ul li.page-item-623 a:visited, .nav-menu ul li.page-item-1292 a:visited {
 	color: #251d36;
 }
 
-.nav-menu ul li.page-item-7.current_page_item a, .nav-menu ul li.page-item-9.current_page_item a, .nav-menu ul li.page-item-623.current_page_item a, .nav-menu ul li.page-item-1287.current_page_item a {
+.nav-menu ul li.page-item-7.current_page_item a, .nav-menu ul li.page-item-9.current_page_item a, .nav-menu ul li.page-item-623.current_page_item a, .nav-menu ul li.page-item-1292.current_page_item a {
 	color: #8173a0;
 }
 
